@@ -89,6 +89,8 @@ const ManageRooms = () => {
     const currentRooms = filteredRooms.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
 
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
     const getImageSrc = (images?: string[]) => {
         if (!images || images.length === 0 || !images[0]) return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
         const src = images[0];
