@@ -31,10 +31,8 @@ const RoomDetails = () => {
                 const res = await api.get(`/rooms/${id}`);
                 setRoom(res.data);
             } catch (err) {
-                console.log("Error fetching room or dummy data fallback");
-                // Fallback for demo if ID is 1 or 2
-                if (id === '1') setRoom({ _id: '1', name: 'Deluxe Suite', description: 'Experience the ultimate in luxury with our Deluxe Suite. Featuring a spacious living area, king-size bed, and a private balcony with stunning city views.', price: 5000, images: ['https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], amenities: ['WiFi', 'AC', 'Jacuzzi', 'Ocean View'] });
-                if (id === '2') setRoom({ _id: '2', name: 'Executive Room', description: 'Perfect for business travelers, this room offers a large work desk, high-speed internet, and a comfortable seating area for relaxation.', price: 3500, images: ['https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], amenities: ['WiFi', 'AC', 'Desk', 'Safe'] });
+                console.log("Error fetching room:", err);
+                setRoom({ _error: true });
             }
         };
         if (id) fetchRoom();
@@ -107,6 +105,23 @@ const RoomDetails = () => {
         </div>
     );
 
+    if (room._error) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-center px-4">
+            <h1 className="text-4xl font-serif font-bold text-gray-900 dark:text-white mb-4">Room Not Found</h1>
+            <p className="text-gray-500 dark:text-gray-400 mb-8">We could not load this room's details. It might have been removed.</p>
+            <Link href="/rooms" className="px-8 py-3 bg-blue-600 text-white rounded-full font-bold uppercase tracking-widest text-sm hover:bg-blue-700 transition-colors">
+                Back to All Rooms
+            </Link>
+        </div>
+    );
+
+    const getImageSrc = (images?: string[]) => {
+        if (!images || images.length === 0 || !images[0]) return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+        const src = images[0];
+        if (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:')) return src;
+        return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -125,8 +140,8 @@ const RoomDetails = () => {
                         {/* Main Image */}
                         <div className="rounded-2xl overflow-hidden shadow-2xl relative h-[400px] md:h-[500px]">
                             <Image
-                                src={room.images[0]}
-                                alt={room.name}
+                                src={getImageSrc(room.images)}
+                                alt={room.name || "Room Image"}
                                 fill
                                 className="object-cover transform hover:scale-105 transition-transform duration-700"
                             />

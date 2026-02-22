@@ -38,7 +38,7 @@ const verifyUser = (req, res, next) => {
 
 const verifyAdmin = (req, res, next) => {
     verifyToken(req, res, () => {
-        if (req.user.role === 'admin') {
+        if (req.user && req.user.role === 'admin') {
             next();
         } else {
             return next(createError(403, "You are not authorized!"));

@@ -47,7 +47,7 @@ const ManageRooms = () => {
                 price: Number(formData.price),
                 capacity: Number(formData.capacity),
                 amenities: formData.amenities.split(',').map(item => item.trim()),
-                images: formData.images.split(',').map(item => item.trim()),
+                images: formData.images.startsWith('data:') ? [formData.images] : formData.images.split(',').map(item => item.trim()),
             };
             await api.post('/rooms', payload);
             setFormData({
@@ -89,7 +89,23 @@ const ManageRooms = () => {
     const currentRooms = filteredRooms.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
 
-    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+    const getImageSrc = (images?: string[]) => {
+        if (!images || images.length === 0 || !images[0]) return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+        const src = images[0];
+        if (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:')) return src;
+        return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, images: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
         <div className="p-4 md:p-6 max-w-[1600px] mx-auto min-h-screen">
@@ -139,7 +155,7 @@ const ManageRooms = () => {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center">
                                             <div className="h-16 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200 relative">
-                                                <Image className="object-cover" src={room.images[0]} alt="" fill />
+                                                <Image className="object-cover" src={getImageSrc(room.images)} alt="" fill />
                                             </div>
                                             <div className="ml-4">
                                                 <div className="text-sm font-bold text-gray-900">{room.name}</div>
@@ -207,7 +223,7 @@ const ManageRooms = () => {
                                 <div key={room._id} className="p-4 flex flex-col gap-4">
                                     <div className="flex gap-4">
                                         <div className="h-20 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200 relative">
-                                            <Image className="object-cover" src={room.images[0]} alt="" fill />
+                                            <Image className="object-cover" src={getImageSrc(room.images)} alt="" fill />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start">
@@ -299,33 +315,48 @@ const ManageRooms = () => {
                                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="col-span-2">
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Room Name</label>
-                                        <input type="text" name="name" placeholder="e.g. Deluxe King Suite" value={formData.name} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                                        <input type="text" name="name" placeholder="e.g. Deluxe King Suite" value={formData.name} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-900 bg-white" />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Price per Night (₹)</label>
-                                        <input type="number" name="price" placeholder="0" value={formData.price} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                                        <input type="number" name="price" placeholder="0" value={formData.price} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-900 bg-white" />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Max Capacity</label>
-                                        <input type="number" name="capacity" placeholder="Guests" value={formData.capacity} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                                        <input type="number" name="capacity" placeholder="Guests" value={formData.capacity} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-900 bg-white" />
                                     </div>
 
                                     <div className="col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Image URL</label>
-                                        <input type="text" name="images" placeholder="https://..." value={formData.images} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                                        <p className="text-xs text-gray-500 mt-1">Enter a single URL for now (comma separated support coming soon)</p>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Image Setup</label>
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex items-center gap-4">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleImageUpload}
+                                                    className="w-1/2 p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                                />
+                                                <span className="text-gray-400 font-bold text-sm uppercase">OR</span>
+                                                <input type="text" name="images" placeholder="Enter Image URL directly here..." value={formData.images} onChange={handleChange} required className="flex-1 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-900 bg-white text-sm" />
+                                            </div>
+                                            {formData.images && formData.images.startsWith('data:') && (
+                                                <div className="w-24 h-16 rounded-lg overflow-hidden border border-gray-200 relative">
+                                                    <Image src={formData.images} fill alt="Preview" className="object-cover" />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="col-span-2">
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Amenities</label>
-                                        <input type="text" name="amenities" placeholder="e.g. WiFi, AC, TV, Jacuzzi" value={formData.amenities} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                                        <input type="text" name="amenities" placeholder="e.g. WiFi, AC, TV, Jacuzzi" value={formData.amenities} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-900 bg-white" />
                                     </div>
 
                                     <div className="col-span-2">
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-                                        <textarea name="description" placeholder="Describe the room features and view..." value={formData.description} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all h-32 resize-none"></textarea>
+                                        <textarea name="description" placeholder="Describe the room features and view..." value={formData.description} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all h-32 resize-none text-gray-900 bg-white"></textarea>
                                     </div>
 
                                     <div className="col-span-2 pt-4 flex gap-4">

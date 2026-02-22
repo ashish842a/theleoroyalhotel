@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import api from "../lib/api";
 
 export default function PremiumLoader() {
     const [isLoading, setIsLoading] = useState(true);
     const pathname = usePathname();
+
+    useEffect(() => {
+        // Ping the backend to wake it up from sleep mode (Render, Vercel etc fallback)
+        api.get('/health').catch(() => console.log('Waking up backend server...'));
+    }, []);
 
     useEffect(() => {
         // Show the loader when pathname changes or on initial load
