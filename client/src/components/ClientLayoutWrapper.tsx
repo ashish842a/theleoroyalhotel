@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import PremiumLoader from "./PremiumLoader";
 
 export default function ClientLayoutWrapper({
     children,
@@ -14,11 +15,17 @@ export default function ClientLayoutWrapper({
     const isAdmin = pathname?.startsWith("/admin");
 
     if (isAdmin) {
-        return <>{children}</>;
+        return (
+            <>
+                <PremiumLoader />
+                {children}
+            </>
+        );
     }
 
     return (
         <>
+            <PremiumLoader />
             <Navbar />
             <main className="pt-20 min-h-screen">{children}</main>
             {pathname !== "/dashboard" && <Footer />}
